@@ -1,0 +1,148 @@
+---
+title: "Home Team Advantage in International Soccer"
+author: "Michael Nichols, Evan Weller"
+date: "2024-12-11"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+## Introduction:
+
+### Research Question
+
+Does a 'home field advantage' exist in international soccer?
+
+### Data Source
+
+The data, *International Football Results from 1872 to 2024*, was sourced from [Kaggle](https://www.kaggle.co/datasets/martj42/international-football-results-from-1872-2017). This data set contains the results and statistics from over 40,000 international soccer matches from as far back as 1872.
+
+#### Provenance
+
+The dataset was collected by Mart Jürisoo to analyze international football trends and performance. It includes matches from over 200 nations, covering friendlies, qualifiers, and tournament matches.
+
+#### FAIR Principles
+
+The dataset adheres to FAIR principles: - **Findable:** Available on Kaggle with descriptive metadata. - **Accessible:** Publicly downloadable in CSV format. - **Interoperable:** Compatible with standard data analysis tools. - **Reusable:** Clear licensing allows academic and non-commercial usage.
+
+#### CARE Principles
+
+The dataset does not involve sensitive or personal data, making ethical concerns minimal. It focuses on publicly available sports data.
+
+## Results and Discussion
+
+### Home Team Win Percentage
+
+Figure 1 illustrates the win percentage of home teams across all matches. The home team wins approximately **X%** of the time.
+
+### Average Goals Scored
+
+Figure 2 compares average goals scored by home teams (**Y goals**) against the average total goals in matches (**Z goals**). This suggests...
+
+------------------------------------------------------------------------
+
+## Data Visualizations
+
+```{r include = FALSE}
+#|label = Cleaning Data
+# Load libraries
+
+library(tidyverse)
+library(knitr)
+
+# Load data
+football_data <-read_csv("results.csv")
+
+# Filter out neutral matches
+football_clean <- football_data %>%
+  filter(neutral == FALSE)
+
+# Add match outcome column
+football_clean <- football_clean %>%
+  mutate(
+    outcome = case_when(
+      home_score > away_score ~ "Home Win",
+      home_score < away_score ~ "Away Win",
+      TRUE ~ "Draw"
+    )
+  )
+
+# Home win percentage
+home_win_rate <- as.integer(mean(football_clean$outcome == "Home Win") * 100)
+
+# Average goals
+avg_home_goals <- mean(football_clean$home_score)
+avg_total_goals_per_team <- mean((football_clean$home_score + football_clean$away_score)/2)
+```
+
+```{r echo = FALSE}
+football_clean %>%
+  select(home_team, away_team, home_score, away_score, outcome, date) %>%
+  head(10) %>%  # Display the first 10 rows for clarity
+  kable(caption = "Football Match Results (Filtered)")
+```
+
+### Figure 1: Home Team Win Percentage
+
+A bar plot of match outcomes (win/loss/draw) categorized by match type.
+
+```{r include = FALSE}
+#|Label = Figure 1
+# Plot 1: Home team win percentage
+library(ggplot2)
+
+win_plot <- football_clean %>%
+  count(outcome) %>%
+  ggplot(aes(x = outcome, y = n, fill = outcome)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Match Outcome",
+    x = "Match Outcome",
+    y = "Count"
+  ) +
+  theme_minimal()
+ggsave("win_plot.pdf", win_plot, width = 8, height = 6)
+```
+
+```{r echo = FALSE}
+print(win_plot)
+```
+
+### Figure 2: Average Goals Comparison
+
+A side-by-side bar chart comparing home goals and total match goals.
+
+```{r include = FALSE}
+#|Label = Figure 2
+# Plot 2: Average goals comparison
+goals_plot <- tibble(
+  Type = c("Home Goals", "Total Goals Per Team"),
+  Average = c(avg_home_goals, avg_total_goals_per_team)
+) %>%
+  ggplot(aes(x = Type, y = Average, fill = Type)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Average Goals Scored",
+    x = "Home Goal or Team Goal",
+    y = "Goals"
+  ) +
+  theme_minimal()
+ggsave("goals_plot.pdf", goals_plot, width = 8, height = 6)
+```
+
+```{r echo= FALSE}
+print(goals_plot)
+```
+
+------------------------------------------------------------------------
+
+## Conclusion
+
+------------------------------------------------------------------------
+
+## Appendix: Code
+
+```{r codeAppend, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+
+```
